@@ -1,0 +1,78 @@
+root ::= thought? ws (game-scene | actor-definition | custom-variables)
+
+thought ::= "<think>" thought-content "</think>"
+thought-content ::= [^\t]* 
+
+game-scene ::= "{" ws game-name (ws "," ws game-field)* ws "," ws cast-field ws "}"
+
+game-name ::= "\"GameName\":" ws string
+game-field ::= camera-pos-field | camera-rot-field | sun-pos-field | sun-rot-field | sun-color-field | sun-ambient-field | custom-vars-field
+
+camera-pos-field ::= "\"CameraPosition\":" ws vec3
+camera-rot-field ::= "\"CameraRotation\":" ws vec3
+sun-pos-field ::= "\"SunPosition\":" ws vec3
+sun-rot-field ::= "\"SunRotation\":" ws vec3
+sun-color-field ::= "\"SunColor\":" ws vec3-int
+sun-ambient-field ::= "\"SunAmbientColor\":" ws vec3-int
+custom-vars-field ::= "\"CustomVariables\":" ws custom-var-array
+
+cast-field ::= "\"Cast\":" ws cast-array
+cast-array ::= "[" ws (actor-in-cast (ws "," ws actor-in-cast)*)? ws "]"
+actor-in-cast ::= "{" ws actor-name (ws "," ws actor-field)* ws "}"
+
+actor-definition ::= "{" ws actor-name ws "," ws prefab-field ws "," ws properties-field (ws "," ws actor-field)* ws "}"
+
+actor-name ::= "\"ActorName\":" ws string
+
+actor-field ::= prefab-field | tag-field | position-field | rotation-field | scale-field | active-field | properties-field | script-field | drag-field | friction-field | velocity-field | angular-velocity-field
+
+prefab-field ::= "\"PrefabName\":" ws string
+tag-field ::= "\"Tag\":" ws string
+position-field ::= "\"Position\":" ws vec3
+rotation-field ::= "\"Rotation\":" ws vec3
+scale-field ::= "\"Scale\":" ws vec3
+active-field ::= "\"Active\":" ws boolean
+
+
+properties-field ::= "\"Properties\":" ws property-map
+property-map ::= "{" ws (prop-pair (ws "," ws prop-pair)*)? ws "}"
+prop-pair ::= string ws ":" ws prop-value
+prop-value ::= number | boolean | string | vec3
+
+script-field ::= "\"Script\":" ws script-array
+drag-field ::= "\"Drag\":" ws number
+friction-field ::= "\"Friction\":" ws number
+velocity-field ::= "\"Velocity\":" ws vec3
+angular-velocity-field ::= "\"AngularVelocity\":" ws vec3
+
+
+custom-variables ::= "\"CustomVariables\": " custom-var-array
+custom-var-array ::= "[" ws (custom-var (ws "," ws custom-var)*)? ws "]"
+custom-var ::= "{" ws "\"name\":" ws string ws "," ws "\"type\":" ws string ws "," ws var-value ws "}"
+var-value ::= float-value | bool-value
+float-value ::= "\"floatValue\":" ws number
+bool-value ::= "\"boolValue\":" ws boolean
+
+script-array ::= "[" ws (rule (ws "," ws rule)*)? ws "]"
+rule ::= "{" ws rule-content ws "}"
+rule-content ::= do-only | when-do
+do-only ::= "\"Do\":" ws action-array
+when-do ::= "\"When\":" ws condition-array ws "," ws "\"Do\":" ws action-array
+
+action-array ::= "[" ws (action-string (ws "," ws action-string)*)? ws "]"
+condition-array ::= "[" ws (condition-string (ws "," ws condition-string)*)? ws "]"
+action-string ::= string
+condition-string ::= string
+
+vec3 ::= "[" ws number ws "," ws number ws "," ws number ws "]"
+vec3-int ::= "[" ws int ws "," ws int ws "," ws int ws "]"
+string-array ::= "[" ws (string (ws "," ws string)*)? ws "]" 
+string ::= "\"" chars "\""
+chars ::= char*
+char ::= [^"\\] | "\\" escape
+escape ::= ["\\bfnrt/]
+number ::= "-"? int frac?
+int ::= "0" | [1-9] [0-9]*
+frac ::= "." [0-9]+
+boolean ::= "true" | "false"
+ws ::= [ \t\n\r]*
